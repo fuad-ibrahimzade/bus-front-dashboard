@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Font Dashboard - CSV/Excel Analytics</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- SheetJS for Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .column-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #e2e8f0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+        }
+        
+        .bold-text {
+            font-weight: 700;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Bus Font Dashboard</h1>
+            <p class="text-white/80">Upload CSV/Excel files and generate comprehensive analytics</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="glass-card p-8 mb-6">
+            <div class="upload-zone rounded-xl p-12 text-center cursor-pointer" id="dropZone">
+                <i data-lucide="upload-cloud" class="w-16 h-16 mx-auto mb-4 text-gray-400"></i>
+                <h3 class="text-xl font-semibold mb-2">Upload your data file</h3>
+                <p class="text-gray-600 mb-4">Drag & drop CSV or Excel files here, or click to browse</p>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="hidden">
+                <button onclick="document.getElementById('fileInput').click()" 
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:opacity-90 transition">
+                    Choose File
+                </button>
+                <p class="text-sm text-gray-500 mt-4">Supported formats: CSV, XLSX, XLS</p>
+            </div>
+            <div id="fileName" class="mt-4 text-center font-medium text-purple-700 hidden"></div>
+        </div>
+
+        <!-- Column Management -->
+        <div id="columnManagement" class="glass-card p-6 mb-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    Column Management
+                </h2>
+                <button onclick="resetApp()" class="text-sm text-gray-600 hover:text-red-600 flex items-center gap-1">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    Upload New File
+                </button>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-2">Select columns to include in analysis:</p>
+                <div id="columnBadges" class="flex flex-wrap gap-2"></div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="selectAllColumns()" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm">
+                    Select All
+                </button>
+                <button onclick="deselectAllColumns()" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm">
+                    Deselect All
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" class="hidden">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">Total Rows</p>
+                            <p id="totalRows" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i data-lucide="database" class="w-8 h-8 text-white/60"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">Total Columns</p>
+                            <p id="totalColumns" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i data-lucide="columns" class="w-8 h-8 text-white/60"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">Numeric Columns</p>
+                            <p id="numericColumns" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i data-lucide="bar-chart-2" class="w-8 h-8 text-white/60"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">Categorical Columns</p>
+                            <p id="categoricalColumns" class="text-3xl font-bold">0</p>
+                        </div>
+                        <i data-lucide="layers" class="w-8 h-8 text-white/60"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Data Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Top Categories</h3>
+                    <div class="chart-container">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Trend Analysis</h3>
+                    <div class="chart-container">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Box Plot</h3>
+                    <div class="chart-container">
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Raw Data Preview</h3>
+                    <div class="flex gap-2">
+                        <button onclick="exportCSV()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container border rounded-lg overflow-hidden">
+                    <table id="dataTable" class="w-full border-collapse">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <!-- Dynamic headers -->
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let rawData = [];
+        let headers = [];
+        let selectedColumns = [];
+        let charts = {};
+        let processedData = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFile(file);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFile(file);
+            });
+        });
+
+        async function handleFile(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            document.getElementById('fileName').textContent = `Loaded: ${file.name}`;
+            document.getElementById('fileName').classList.remove('hidden');
+            
+            try {
+                if (ext === 'csv') {
+                    await parseCSV(file);
+                } else if (['xlsx', 'xls'].includes(ext)) {
+                    await parseExcel(file);
+                } else {
+                    alert('Unsupported file format. Please use CSV or Excel files.');
+                    return;
+                }
+                
+                showColumnManagement();
+                renderColumnBadges();
+                selectAllColumns();
+            } catch (error) {
+                console.error('Error parsing file:', error);
+                alert('Error parsing file. Please check the file format.');
+            }
+        }
+
+        function parseCSV(file) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,
+                    complete: (results) => {
+                        rawData = results.data.filter(row => Object.values(row).some(val => val));
+                        headers = results.meta.fields;
+                        resolve();
+                    },
+                    error: reject
+                });
+            });
+        }
+
+        function parseExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        // Use the raw ArrayBuffer directly (SheetJS accepts it)
+                        const data = e.target.result;
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                        // Read sheet into array-of-rows (header:1 -> rows as arrays)
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                        // Find the first row that looks like a header (has at least one non-empty cell)
+                        const headerRowIndex = jsonData.findIndex(row => row && row.some(cell => String(cell).trim() !== ''));
+                        if (headerRowIndex === -1) {
+                            reject(new Error('Empty sheet or no header row found'));
+                            return;
+                        }
+
+                        const headerRow = jsonData[headerRowIndex];
+                        headers = headerRow.map((h, i) => {
+                            const txt = String(h ?? '').trim();
+                            return txt !== '' ? txt : `Column_${i + 1}`;
+                        });
+
+                        // Build objects from rows after the header row
+                        rawData = jsonData.slice(headerRowIndex + 1).map(row => {
+                            const obj = {};
+                            headers.forEach((header, i) => {
+                                obj[header] = row && row[i] !== undefined ? row[i] : null;
+                            });
+                            return obj;
+                        }).filter(row => Object.values(row).some(val => val !== null && val !== ''));
+
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function showColumnManagement() {
+            document.getElementById('columnManagement').classList.remove('hidden');
+        }
+
+        function renderColumnBadges() {
+            const container = document.getElementById('columnBadges');
+            container.innerHTML = '';
+            
+            headers.forEach(header => {
+                const badge = document.createElement('span');
+                badge.className = 'column-badge cursor-pointer';
+                badge.innerHTML = `
+                    <input type="checkbox" id="col-${header.replace(/\s/g, '-')}" 
+                           class="column-checkbox" data-column="${header}"
+                           onchange="updateSelectedColumns()">
+                    <label for="col-${header.replace(/\s/g, '-')}" class="cursor-pointer">
+                        ${header}
+                    </label>
+                `;
+                container.appendChild(badge);
+            });
+        }
+
+        function selectAllColumns() {
+            document.querySelectorAll('.column-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            updateSelectedColumns();
+        }
+
+        function deselectAllColumns() {
+            document.querySelectorAll('.column-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            updateSelectedColumns();
+        }
+
+        function updateSelectedColumns() {
+            selectedColumns = [];
+            document.querySelectorAll('.column-checkbox:checked').forEach(cb => {
+                selectedColumns.push(cb.dataset.column);
+            });
+            
+            if (selectedColumns.length > 0) {
+                processData();
+                document.getElementById('dashboardContent').classList.remove('hidden');
+                updateDashboard();
+            } else {
+                document.getElementById('dashboardContent').classList.add('hidden');
+            }
+        }
+
+        function processData() {
+            processedData = rawData.map(row => {
+                const newRow = {};
+                selectedColumns.forEach(col => {
+                    newRow[col] = row[col];
+                });
+                return newRow;
+            });
+        }
+
+        function updateDashboard() {
+            updateStats();
+            updateBarChart();
+            updatePieChart();
+            updateLineChart();
+            updateScatterChart();
+            updateTable();
+            lucide.createIcons();
+        }
+
+        function updateStats() {
+            document.getElementById('totalRows').textContent = processedData.length;
+            document.getElementById('totalColumns').textContent = selectedColumns.length;
+            
+            const numericCols = selectedColumns.filter(col => 
+                processedData.some(row => typeof row[col] === 'number')
+            );
+            document.getElementById('numericColumns').textContent = numericCols.length;
+            document.getElementById('categoricalColumns').textContent = selectedColumns.length - numericCols.length;
+        }
+
+        function updateBarChart() {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            if (charts.barChart) charts.barChart.destroy();
+            
+            const numericCols = selectedColumns.filter(col => 
+                processedData.some(row => typeof row[col] === 'number')
+            );
+            
+            const datasets = numericCols.slice(0, 5).map((col, i) => ({
+                label: col,
+                data: processedData.map(row => Number(row[col]) || 0).slice(0, 10),
+                backgroundColor: `hsla(${i * 60}, 70%, 60%, 0.5)`,
+                borderColor: `hsla(${i * 60}, 70%, 50%, 1)`,
+                borderWidth: 1
+            }));
+            
+            charts.barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: processedData.slice(0, 10).map((_, i) => `Row ${i + 1}`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function updatePieChart() {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            if (charts.pieChart) charts.pieChart.destroy();
+            
+            const categoricalCols = selectedColumns.filter(col => 
+                processedData.some(row => typeof row[col] === 'string' || row[col] instanceof Date)
+            );
+            
+            if (categoricalCols.length === 0) {
+                ctx.canvas.parentElement.innerHTML = '<p class="text-gray-500 text-center">No categorical data available</p>';
+                return;
+            }
+            
+            const firstCatCol = categoricalCols[0];
+            const valueCounts = {};
+            processedData.forEach(row => {
+                const val = String(row[firstCatCol] || 'Unknown');
+                valueCounts[val] = (valueCounts[val] || 0) + 1;
+            });
+            
+            const topValues = Object.entries(valueCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+            
+            charts.pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: topValues.map(([label]) => label),
+                    datasets: [{
+                        data: topValues.map(([, count]) => count),
+                        backgroundColor: [
+                            '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                            '#43e97b', '#fa709a', '#fee140', '#30cfd0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        }
+
+        function updateLineChart() {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            if (charts.lineChart) charts.lineChart.destroy();
+            
+            const numericCols = selectedColumns.filter(col => 
+                processedData.some(row => typeof row[col] === 'number')
+            );
+            
+            if (numericCols.length === 0) {
+                ctx.canvas.parentElement.innerHTML = '<p class="text-gray-500 text-center">No numeric data available</p>';
+                return;
+            }
+            
+            const datasets = numericCols.slice(0, 3).map((col, i) => ({
+                label: col,
+                data: processedData.map(row => Number(row[col]) || 0),
+                borderColor: `hsla(${i * 120}, 70%, 50%, 1)`,
+                backgroundColor: `hsla(${i * 120}, 70%, 50%, 0.1)`,
+                fill: false,
+                tension: 0.4
+            }));
+            
+            charts.lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: processedData.map((_, i) => i + 1),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function updateScatterChart() {
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            if (charts.scatterChart) charts.scatterChart.destroy();
+            
+            const numericCols = selectedColumns.filter(col => 
+                processedData.some(row => typeof row[col] === 'number')
+            );
+            
+            if (numericCols.length < 2) {
+                ctx.canvas.parentElement.innerHTML = '<p class="text-gray-500 text-center">Need at least 2 numeric columns</p>';
+                return;
+            }
+            
+            charts.scatterChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: `${numericCols[0]} vs ${numericCols[1]}`,
+                        data: processedData.map(row => ({
+                            x: Number(row[numericCols[0]]) || 0,
+                            y: Number(row[numericCols[1]]) || 0
+                        })),
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        x: { title: { display: true, text: numericCols[0] } },
+                        y: { title: { display: true, text: numericCols[1] } }
+                    }
+                }
+            });
+        }
+
+        function updateTable() {
+            const table = document.getElementById('dataTable');
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            
+            thead.innerHTML = `
+                <tr>
+                    ${selectedColumns.map(col => `<th class="border px-4 py-2 text-left text-sm font-semibold bg-gray-100">${col}</th>`).join('')}
+                </tr>
+            `;
+            
+            const rows = processedData.slice(0, 100).map(row => `
+                <tr class="hover:bg-gray-50">
+                    ${selectedColumns.map(col => `<td class="border px-4 py-2 text-sm">${row[col] ?? ''}</td>`).join('')}
+                </tr>
+            `).join('');
+            
+            tbody.innerHTML = rows;
+        }
+
+        function exportCSV() {
+            const csvContent = [
+                selectedColumns.join(','),
+                ...processedData.map(row => 
+                    selectedColumns.map(col => `"${row[col] ?? ''}"`).join(',')
+                )
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dashboard_export.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetApp() {
+            rawData = [];
+            headers = [];
+            selectedColumns = [];
+            processedData = [];
+            
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+            
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileName').classList.add('hidden');
+            document.getElementById('columnManagement').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
