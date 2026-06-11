@@ -1,0 +1,1 @@
+create prompt text area where user  can describe data format, desired dashboard or so even optional image file format upload that when entered will use vercel sdk on ui will generate desired dashboard on the fly from uploaded csv or xlsx files?
