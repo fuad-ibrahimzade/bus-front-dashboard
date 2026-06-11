@@ -513,7 +513,7 @@
 
         <!-- File Upload Section -->
         <div class="upload-section">
-            <h2 style="color: var(--secondary-color); margin-bottom: 20px;">Upload Your Data</h2>
+            <h2 style="color: var(--secondary-color); margin-bottom: 20px;">📤 Upload Your Data</h2>
             <p style="color: #666; margin-bottom: 20px;">Supported formats: CSV, Excel (.xlsx, .xls)</p>
             
             <div class="file-input-wrapper">
@@ -546,33 +546,13 @@
             </div>
         </div>
 
-        <!-- Column Configuration Panel -->
-        <div id="columnConfigPanel" class="hidden">
-            <h3>📋 Configure Your Data Columns</h3>
-            <p style="color: #666; margin-bottom: 20px;">Map your data columns to the required fields (From Station, From Meso Zone, To Meso Zone, Trips) for analysis.</p>
-            
-            <div id="columnConfigList"></div>
-
-            <div class="button-group">
-                <button id="proceedButton" class="btn btn-primary btn-lg">Proceed to Dashboard</button>
-            </div>
-        </div>
-
-        <!-- Data Preview Panel -->
-        <div id="dataPreviewPanel" class="hidden">
-            <h3>👁️ Data Preview (First 10 Rows)</h3>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover" id="previewTable">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- Dashboard Section -->
         <div id="dashboardSection" class="hidden">
             <div class="dashboard-title">
                 <h2>📊 Dashboard Analytics</h2>
+                <p style="color: #999; font-size: 13px; margin-top: 10px;">
+                    📌 Using default columns: <strong>From Station</strong>, <strong>From Meso Zone</strong>, <strong>To Meso Zone</strong>, <strong>Trips</strong>
+                </p>
                 <button id="resetButton" class="btn btn-outline-primary mt-3">↺ Upload New File</button>
             </div>
 
@@ -647,16 +627,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
     <!-- Main Dashboard Script -->
-    <script src="dashboard.js"></script>
-    
-    <script>
-        // Show file info when file is selected
-        const fileInput = document.getElementById('fileInput');
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                document.getElementById('fileInfo').classList.remove('hidden');
-            }
-        });
-    </script>
+    <script src="dashboard-simple.js"></script>
 </body>
 </html>
