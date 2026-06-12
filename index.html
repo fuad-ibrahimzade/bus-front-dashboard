@@ -1,633 +1,832 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bus Dashboard Analytics</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --accent-color: #ed64a6;
-            --light-bg: #f8f9fa;
-            --border-color: #e0e0e0;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container-wrapper {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        header {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        header h1 {
-            color: var(--primary-color);
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        
-        header p {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .upload-section {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .file-input-wrapper {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-        
-        .file-input-wrapper input[type="file"] {
-            display: none;
-        }
-        
-        .file-input-label {
-            display: inline-block;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .file-input-label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .file-info {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .file-stat {
-            text-align: center;
-        }
-        
-        .file-stat-label {
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        
-        .file-stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        
-        .file-status {
-            padding: 10px 15px;
-            background: #f0f0f0;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #666;
-        }
-        
-        /* Column Configuration */
-        #columnConfigPanel {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-        
-        #columnConfigPanel h3 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-        
-        .column-config-item {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 12px;
-            background: var(--light-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .column-config-item label {
-            flex: 0 0 180px;
-            font-weight: 600;
-            color: var(--secondary-color);
-        }
-        
-        .column-config-item select {
-            flex: 1;
-        }
-        
-        /* Data Preview */
-        #dataPreviewPanel {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-        
-        #dataPreviewPanel h3 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-        
-        .table-responsive {
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .table {
-            margin-bottom: 0;
-        }
-        
-        .table thead {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            font-weight: 600;
-        }
-        
-        .table tbody tr:hover {
-            background: var(--light-bg);
-        }
-        
-        /* Loading Spinner */
-        .spinner-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        
-        .spinner-overlay.active {
-            display: flex;
-        }
-        
-        .spinner-content {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .spinner-content h3 {
-            color: var(--primary-color);
-            margin-top: 20px;
-        }
-        
-        /* Button Group */
-        .button-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-outline-primary {
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-outline-primary:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .btn-danger {
-            background: #ff6b6b;
-            border-color: #ff6b6b;
-        }
-        
-        .btn-danger:hover {
-            background: #ff5252;
-            border-color: #ff5252;
-        }
-        
-        /* Dashboard Section */
-        #dashboardSection {
-            margin-top: 30px;
-        }
-        
-        #dashboardSection.hidden {
-            display: none;
-        }
-        
-        .dashboard-title {
-            background: white;
-            padding: 30px;
-            border-radius: 12px 12px 0 0;
-            border-bottom: 1px solid var(--border-color);
-            text-align: center;
-        }
-        
-        .dashboard-title h2 {
-            color: var(--primary-color);
-            margin: 0;
-            font-weight: 700;
-        }
-        
-        /* Statistics Cards */
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-card {
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #999;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        
-        /* Charts Container */
-        .charts-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .chart-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .chart-card h3 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 16px;
-        }
-        
-        .chart-wrapper {
-            position: relative;
-            height: 400px;
-            width: 100%;
-        }
-        
-        canvas {
-            max-height: 100%;
-        }
-        
-        /* Data Table */
-        .data-table-section {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-        
-        .data-table-section h3 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-        
-        .data-table-wrapper {
-            overflow-x: auto;
-            border-radius: 8px;
-        }
-        
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        
-        .data-table thead {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-        }
-        
-        .data-table thead th {
-            padding: 15px;
-            text-align: left;
-            border: none;
-        }
-        
-        .data-table tbody td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .data-table tbody tr:hover {
-            background: var(--light-bg);
-        }
-        
-        .data-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
-        /* Utility Classes */
-        .hidden {
-            display: none !important;
-        }
-        
-        .mb-0 {
-            margin-bottom: 0;
-        }
-        
-        .mt-3 {
-            margin-top: 1rem;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .text-muted {
-            color: #999;
-        }
-        
-        hr {
-            margin: 20px 0;
-            border: none;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-        
-        .form-select, .form-control {
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-select:focus, .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .form-select-sm, .form-control-sm {
-            font-size: 13px;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .charts-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .file-info {
-                flex-direction: column;
-            }
-            
-            .column-config-item {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .column-config-item label {
-                flex: none;
-            }
-            
-            .column-config-item select {
-                flex: none;
-                width: 100%;
-            }
-            
-            .stat-card {
-                margin-bottom: 10px;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .button-group button {
-                width: 100%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bus Dashboard Analytics</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #667eea;
+      --secondary-color: #764ba2;
+      --accent-color: #ed64a6;
+      --light-bg: #f8f9fa;
+      --border-color: #e0e0e0;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    header h1 {
+      color: var(--primary-color);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    header p {
+      color: #666;
+      font-size: 14px;
+    }
+    .upload-section {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .file-input-wrapper input[type="file"] {
+      display: none;
+    }
+    .file-input-label {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    .file-input-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    .file-info {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+    .file-stat {
+      text-align: center;
+    }
+    .file-stat-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .file-stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    .file-status {
+      padding: 10px 15px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #666;
+    }
+    .spinner-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .spinner-overlay.active {
+      display: flex;
+    }
+    .spinner-content {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .spinner-content h3 {
+      color: var(--primary-color);
+      margin-top: 20px;
+    }
+    #dashboardSection {
+      margin-top: 30px;
+    }
+    #dashboardSection.hidden {
+      display: none;
+    }
+    .dashboard-title {
+      background: white;
+      padding: 30px;
+      border-radius: 12px 12px 0 0;
+      border-bottom: 1px solid var(--border-color);
+      text-align: center;
+    }
+    .dashboard-title h2 {
+      color: var(--primary-color);
+      margin: 0;
+      font-weight: 700;
+    }
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .stat-card {
+      padding: 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-color);
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #999;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    .chart-card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .chart-card h3 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+    canvas {
+      max-height: 100%;
+    }
+    .data-table-section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+    .data-table-section h3 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .data-table-wrapper {
+      overflow-x: auto;
+      border-radius: 8px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table thead {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    .data-table thead th {
+      padding: 15px;
+      text-align: left;
+      border: none;
+    }
+    .data-table tbody td {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .data-table tbody tr:hover {
+      background: var(--light-bg);
+    }
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .mb-0 {
+      margin-bottom: 0;
+    }
+    .mt-3 {
+      margin-top: 1rem;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .text-muted {
+      color: #999;
+    }
+    hr {
+      margin: 20px 0;
+      border: none;
+      border-top: 1px solid var(--border-color);
+    }
+    .form-label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    .form-select, .form-control {
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .form-select:focus, .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .form-select-sm, .form-control-sm {
+      font-size: 13px;
+    }
+    @media (max-width: 768px) {
+      .charts-container {
+        grid-template-columns: 1fr;
+      }
+      .file-info {
+        flex-direction: column;
+      }
+      .stat-card {
+        margin-bottom: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container-wrapper">
-        <!-- Header -->
-        <header>
-            <h1>🚌 Bus Transit Dashboard Analytics</h1>
-            <p>Upload your transit data and get comprehensive analytics with interactive visualizations</p>
-        </header>
+  <div class="container-wrapper">
+    <!-- Header -->
+    <header>
+      <h1>🚌 Bus Transit Dashboard Analytics</h1>
+      <p>Upload your transit data and get comprehensive analytics with interactive visualizations</p>
+    </header>
 
-        <!-- File Upload Section -->
-        <div class="upload-section">
-            <h2 style="color: var(--secondary-color); margin-bottom: 20px;">📤 Upload Your Data</h2>
-            <p style="color: #666; margin-bottom: 20px;">Supported formats: CSV, Excel (.xlsx, .xls)</p>
-            
-            <div class="file-input-wrapper">
-                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
-                <label for="fileInput" class="file-input-label">📁 Choose File to Upload</label>
-            </div>
+    <!-- File Upload Section -->
+    <div class="upload-section">
+      <h2 style="color: var(--secondary-color); margin-bottom: 20px;">📤 Upload Your Data</h2>
+      <p style="color: #666; margin-bottom: 20px;">Supported formats: CSV, Excel (.xlsx, .xls)</p>
+      <div class="file-input-wrapper">
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+        <label for="fileInput" class="file-input-label">📁 Choose File to Upload</label>
+      </div>
 
-            <div class="file-info hidden" id="fileInfo">
-                <div class="file-stat">
-                    <div class="file-stat-label">Rows</div>
-                    <div class="file-stat-value" id="rowCount">0</div>
-                </div>
-                <div class="file-stat">
-                    <div class="file-stat-label">Columns</div>
-                    <div class="file-stat-value" id="colCount">0</div>
-                </div>
-                <div class="file-stat">
-                    <div class="file-status" id="fileStatus">-</div>
-                </div>
-            </div>
+      <div class="file-info hidden" id="fileInfo">
+        <div class="file-stat">
+          <div class="file-stat-label">Rows</div>
+          <div class="file-stat-value" id="rowCount">0</div>
         </div>
-
-        <!-- Loading Spinner -->
-        <div class="spinner-overlay" id="loadingSpinner">
-            <div class="spinner-content">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <h3>Processing File...</h3>
-            </div>
+        <div class="file-stat">
+          <div class="file-stat-label">Columns</div>
+          <div class="file-stat-value" id="colCount">0</div>
         </div>
-
-        <!-- Dashboard Section -->
-        <div id="dashboardSection" class="hidden">
-            <div class="dashboard-title">
-                <h2>📊 Dashboard Analytics</h2>
-                <p style="color: #999; font-size: 13px; margin-top: 10px;">
-                    📌 Using default columns: <strong>From Station</strong>, <strong>From Meso Zone</strong>, <strong>To Meso Zone</strong>, <strong>Trips</strong>
-                </p>
-                <button id="resetButton" class="btn btn-outline-primary mt-3">↺ Upload New File</button>
-            </div>
-
-            <!-- Statistics Cards -->
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-label">Total Trips</div>
-                    <div class="stat-value" id="statTotalTrips">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Average Trips</div>
-                    <div class="stat-value" id="statAvgTrips">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Unique Stations</div>
-                    <div class="stat-value" id="statUniqueStations">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Meso Zones</div>
-                    <div class="stat-value" id="statUniqueMesoZones">0</div>
-                </div>
-            </div>
-
-            <!-- Charts -->
-            <div class="charts-container">
-                <div class="chart-card">
-                    <h3>🚀 Top 10 Routes</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="topRoutesChart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h3>🏢 Origin Stations</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="originStationsChart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h3>🗺️ Origin Meso Zones</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="originMesoChart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h3>🎯 Destination Meso Zones</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="destMesoChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Data Table -->
-            <div class="data-table-section">
-                <h3>📋 Complete Data Table</h3>
-                <div class="data-table-wrapper">
-                    <table class="data-table" id="dataTable">
-                        <thead id="dataTableHead"></thead>
-                        <tbody id="dataTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="file-stat">
+          <div class="file-status" id="fileStatus">-</div>
         </div>
+      </div>
+
+      <div id="columnConfigPanel" class="hidden" style="margin-top: 20px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <h3 style="color: var(--primary-color); margin-bottom: 15px; font-weight: 700;">🔧 Column Mapping</h3>
+        <p style="color: #666; margin-bottom: 15px;">Select which columns map to each required field:</p>
+        <div id="columnConfigItems"></div>
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button id="generateDashboardBtn" class="btn btn-primary">📊 Generate Dashboard</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- XLSX Library for Excel parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
-    <!-- PapaParse for CSV parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    
-     <!-- Main Dashboard Script -->
-     <script src="dashboard-simple.js"></script>
-     <!-- <script src="https://cdn.jsdelivr.net/gh/fuad-ibrahimzade/bus-front-dashboard@main/dashboard-simple.min.js"></script> -->
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="loadingSpinner">
+      <div class="spinner-content">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <h3>Processing File...</h3>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="hidden">
+      <div class="dashboard-title">
+        <h2>📊 Dashboard Analytics</h2>
+        <p style="color: #999; font-size: 13px; margin-top: 10px;">
+          📌 Using columns: <strong id="mappingInfo">-</strong>
+        </p>
+        <button id="resetButton" class="btn btn-outline-primary mt-3">↺ Upload New File</button>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="stats-container" style="margin-top: 30px;">
+        <div class="stat-card">
+          <div class="stat-label">Total Trips</div>
+          <div class="stat-value" id="statTotalTrips">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Average Trips</div>
+          <div class="stat-value" id="statAvgTrips">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Unique Stations</div>
+          <div class="stat-value" id="statUniqueStations">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Meso Zones</div>
+          <div class="stat-value" id="statUniqueMesoZones">0</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-container">
+        <div class="chart-card">
+          <h3>🚀 Top 10 Routes</h3>
+          <div class="chart-wrapper">
+            <canvas id="topRoutesChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>🏢 Origin Stations</h3>
+          <div class="chart-wrapper">
+            <canvas id="originStationsChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>🗺️ Origin Meso Zones</h3>
+          <div class="chart-wrapper">
+            <canvas id="originMesoChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>🎯 Destination Meso Zones</h3>
+          <div class="chart-wrapper">
+            <canvas id="destMesoChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="data-table-section">
+        <h3>📋 Complete Data Table</h3>
+        <div class="data-table-wrapper">
+          <table class="data-table" id="dataTable">
+            <thead id="dataTableHead"></thead>
+            <tbody id="dataTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      let rawData = [];
+      let processedData = [];
+      let charts = {};
+      let columnMapping = {};
+      const REQUIRED_FIELDS = [
+        { key: 'fromStation', label: 'From Station' },
+        { key: 'fromMesoZone', label: 'From Meso Zone' },
+        { key: 'toMesoZone', label: 'To Meso Zone' },
+        { key: 'trips', label: 'Trips' }
+      ];
+
+      const fileInput = document.getElementById('fileInput');
+      const fileInfo = document.getElementById('fileInfo');
+      const columnConfigPanel = document.getElementById('columnConfigPanel');
+      const columnConfigItems = document.getElementById('columnConfigItems');
+      const dashboardSection = document.getElementById('dashboardSection');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const rowCount = document.getElementById('rowCount');
+      const colCount = document.getElementById('colCount');
+      const fileStatus = document.getElementById('fileStatus');
+      const resetButton = document.getElementById('resetButton');
+      const generateDashboardBtn = document.getElementById('generateDashboardBtn');
+      const mappingInfo = document.getElementById('mappingInfo');
+
+      function showLoading(show) {
+        loadingSpinner.classList.toggle('active', show);
+      }
+
+      function resetDashboard() {
+        rawData = [];
+        processedData = [];
+        columnMapping = {};
+        fileInput.value = '';
+        dashboardSection.classList.add('hidden');
+        fileInfo.classList.add('hidden');
+        columnConfigPanel.classList.add('hidden');
+        rowCount.textContent = '0';
+        colCount.textContent = '0';
+        fileStatus.textContent = '-';
+        mappingInfo.textContent = '-';
+        Object.values(charts).forEach(function(chart) {
+          if (chart) chart.destroy();
+        });
+        charts = {};
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        showLoading(true);
+        try {
+          if (file.name.toLowerCase().endsWith('.csv')) {
+            parseCSV(file);
+          } else if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) {
+            parseExcel(file);
+          } else {
+            alert('Unsupported file format. Please use CSV or Excel files.');
+            showLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing file:', error);
+          alert('Error reading file: ' + error.message);
+          showLoading(false);
+        }
+      }
+
+      function parseCSV(file) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: function(results) {
+            rawData = results.data.filter(function(row) {
+              return Object.values(row).some(function(v) { return v !== null && v !== '' && v !== undefined; });
+            });
+            processFileData();
+          },
+          error: function(error) {
+            alert('Error parsing CSV: ' + error.message);
+            showLoading(false);
+          }
+        });
+      }
+
+      function parseExcel(file) {
+        if (typeof XLSX === 'undefined') {
+          alert('Excel library not loaded. Please refresh the page and try again.');
+          showLoading(false);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rawSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            if (rawSheet.length === 0) {
+              alert('Sheet is empty');
+              showLoading(false);
+              return;
+            }
+            const headers = rawSheet[0].map(function(h) { return String(h).trim(); });
+            const dataRows = rawSheet.slice(1);
+            rawData = dataRows.map(function(row) {
+              const obj = {};
+              headers.forEach(function(header, index) {
+                const value = row[index];
+                obj[header] = value !== undefined ? value : '';
+              });
+              return obj;
+            }).filter(function(row) {
+              return Object.values(row).some(function(v) { return v !== null && v !== '' && v !== undefined; });
+            });
+            console.log('Detected headers:', headers);
+            console.log('Total rows:', rawData.length);
+            processFileData();
+          } catch (error) {
+            alert('Error parsing Excel: ' + error.message);
+            console.error(error);
+            showLoading(false);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function renderColumnMapping(availableColumns) {
+        columnConfigItems.innerHTML = '';
+        columnMapping = {};
+        REQUIRED_FIELDS.forEach(function(field) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'column-config-item';
+          const label = document.createElement('label');
+          label.textContent = field.label;
+          const select = document.createElement('select');
+          select.className = 'form-select';
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.textContent = '-- Select Column --';
+          select.appendChild(defaultOption);
+          availableColumns.forEach(function(col) {
+            const option = document.createElement('option');
+            option.value = col;
+            option.textContent = col;
+            if (col.toLowerCase() === field.label.toLowerCase() && !columnMapping[field.key]) {
+              option.selected = true;
+              columnMapping[field.key] = col;
+            }
+            select.appendChild(option);
+          });
+          select.addEventListener('change', function() {
+            columnMapping[field.key] = this.value;
+          });
+          wrapper.appendChild(label);
+          wrapper.appendChild(select);
+          columnConfigItems.appendChild(wrapper);
+        });
+        columnConfigPanel.classList.remove('hidden');
+        showLoading(false);
+      }
+
+      function processFileData() {
+        if (rawData.length === 0) {
+          alert('File is empty');
+          showLoading(false);
+          return;
+        }
+        const availableColumns = Object.keys(rawData[0]);
+        rowCount.textContent = rawData.length;
+        colCount.textContent = availableColumns.length;
+        fileStatus.textContent = '✓ Ready';
+        fileInfo.classList.remove('hidden');
+        const exactMatches = {};
+        REQUIRED_FIELDS.forEach(function(field) {
+          const found = availableColumns.find(function(c) { return c === field.label; });
+          if (found) exactMatches[field.key] = found;
+        });
+        if (Object.keys(exactMatches).length === REQUIRED_FIELDS.length) {
+          columnMapping = exactMatches;
+          buildDashboard();
+        } else {
+          renderColumnMapping(availableColumns);
+        }
+      }
+
+      function buildDashboard() {
+        processedData = rawData.map(function(row) {
+          var o = {};
+          REQUIRED_FIELDS.forEach(function(field) {
+            var col = columnMapping[field.key];
+            if (col && row[col] !== undefined) {
+              o[field.label] = field.key === 'trips' ? (parseFloat(row[col]) || 0) : row[col];
+            }
+          });
+          return o;
+        }).filter(function(row) { return row['Trips'] && !isNaN(row['Trips']); });
+        if (processedData.length === 0) {
+          alert('No valid data found with the selected column mapping.');
+          showLoading(false);
+          return;
+        }
+        var sel = REQUIRED_FIELDS.map(function(f) { return columnMapping[f.key] || f.label; }).filter(Boolean).join(', ');
+        mappingInfo.textContent = sel;
+        showLoading(false);
+        dashboardSection.classList.remove('hidden');
+        generateDashboard();
+        dashboardSection.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      generateDashboardBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var missing = REQUIRED_FIELDS.filter(function(f) { return !columnMapping[f.key]; });
+        if (missing.length) {
+          alert('Please map all required columns: ' + missing.map(function(f) { return f.label; }).join(', '));
+          return;
+        }
+        buildDashboard();
+      });
+
+      function generateDashboard() {
+        calculateStatistics();
+        generateTopRoutesChart();
+        generateOriginStationsChart();
+        generateOriginMesoChart();
+        generateDestMesoChart();
+        generateDataTable();
+      }
+
+      function calculateStatistics() {
+        var totalTrips = processedData.reduce(function(sum, row) { return sum + (parseFloat(row['Trips']) || 0); }, 0);
+        var avgTrips = processedData.length ? totalTrips / processedData.length : 0;
+        var uniqueStations = new Set(processedData.map(function(row) { return row['From Station']; }).filter(Boolean)).size;
+        var uniqueMesoZones = new Set(
+          processedData.map(function(row) { return row['From Meso Zone']; }).filter(Boolean)
+            .concat(processedData.map(function(row) { return row['To Meso Zone']; }).filter(Boolean))
+        ).size;
+        document.getElementById('statTotalTrips').textContent = totalTrips.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        document.getElementById('statAvgTrips').textContent = avgTrips.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        document.getElementById('statUniqueStations').textContent = uniqueStations;
+        document.getElementById('statUniqueMesoZones').textContent = uniqueMesoZones;
+      }
+
+      function generateTopRoutesChart() {
+        var routeData = {};
+        processedData.forEach(function(row) {
+          var route = (row['From Station'] || 'Unknown') + ' → ' + (row['To Meso Zone'] || 'Unknown');
+          routeData[route] = (routeData[route] || 0) + (parseFloat(row['Trips']) || 0);
+        });
+        var sorted = Object.entries(routeData).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
+        var ctx = document.getElementById('topRoutesChart').getContext('2d');
+        if (charts.topRoutes) charts.topRoutes.destroy();
+        charts.topRoutes = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: sorted.map(function(item) { return item[0].length > 30 ? item[0].substring(0, 30) + '...' : item[0]; }),
+            datasets: [{
+              label: 'Trips',
+              data: sorted.map(function(item) { return item[1]; }),
+              backgroundColor: 'rgba(102, 126, 234, 0.6)',
+              borderColor: 'rgba(102, 126, 234, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      function generateOriginStationsChart() {
+        var stationData = {};
+        processedData.forEach(function(row) {
+          var station = row['From Station'];
+          if (!station) return;
+          stationData[station] = (stationData[station] || 0) + (parseFloat(row['Trips']) || 0);
+        });
+        var sorted = Object.entries(stationData).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
+        var ctx = document.getElementById('originStationsChart').getContext('2d');
+        if (charts.originStations) charts.originStations.destroy();
+        charts.originStations = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: sorted.map(function(item) { return item[0].length > 20 ? item[0].substring(0, 20) : item[0]; }),
+            datasets: [{
+              data: sorted.map(function(item) { return item[1]; }),
+              backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(118, 75, 162, 0.8)',
+                'rgba(237, 100, 166, 0.8)',
+                'rgba(255, 154, 158, 0.8)',
+                'rgba(250, 208, 196, 0.8)',
+                'rgba(255, 235, 59, 0.8)',
+                'rgba(102, 187, 106, 0.8)',
+                'rgba(66, 133, 244, 0.8)',
+                'rgba(156, 39, 176, 0.8)',
+                'rgba(0, 188, 212, 0.8)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+
+      function generateOriginMesoChart() {
+        var mesoData = {};
+        processedData.forEach(function(row) {
+          var meso = row['From Meso Zone'];
+          if (!meso) return;
+          mesoData[meso] = (mesoData[meso] || 0) + (parseFloat(row['Trips']) || 0);
+        });
+        var sorted = Object.entries(mesoData).sort(function(a, b) { return b[1] - a[1]; });
+        var ctx = document.getElementById('originMesoChart').getContext('2d');
+        if (charts.originMeso) charts.originMeso.destroy();
+        charts.originMeso = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: sorted.map(function(item) { return item[0]; }),
+            datasets: [{
+              label: 'Trips',
+              data: sorted.map(function(item) { return item[1]; }),
+              backgroundColor: 'rgba(118, 75, 162, 0.6)',
+              borderColor: 'rgba(118, 75, 162, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      function generateDestMesoChart() {
+        var mesoData = {};
+        processedData.forEach(function(row) {
+          var meso = row['To Meso Zone'];
+          if (!meso) return;
+          mesoData[meso] = (mesoData[meso] || 0) + (parseFloat(row['Trips']) || 0);
+        });
+        var sorted = Object.entries(mesoData).sort(function(a, b) { return b[1] - a[1]; });
+        var ctx = document.getElementById('destMesoChart').getContext('2d');
+        if (charts.destMeso) charts.destMeso.destroy();
+        charts.destMeso = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: sorted.map(function(item) { return item[0]; }),
+            datasets: [{
+              label: 'Trips',
+              data: sorted.map(function(item) { return item[1]; }),
+              backgroundColor: 'rgba(237, 100, 166, 0.6)',
+              borderColor: 'rgba(237, 100, 166, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      function generateDataTable() {
+        var thead = document.getElementById('dataTableHead');
+        var tbody = document.getElementById('dataTableBody');
+        var allColumns = Object.keys(processedData[0] || {});
+        thead.innerHTML = '<tr>' + allColumns.map(function(col) { return '<th>' + col + '</th>'; }).join('') + '</tr>';
+        tbody.innerHTML = '';
+        processedData.slice(0, 100).forEach(function(row) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = allColumns.map(function(col) {
+            var value = row[col] !== undefined && row[col] !== null ? row[col] : '-';
+            return '<td>' + value + '</td>';
+          }).join('');
+          tbody.appendChild(tr);
+        });
+        if (processedData.length > 100) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="' + allColumns.length + '" class="text-center text-muted">Showing 100 of ' + processedData.length + ' rows</td>';
+          tbody.appendChild(tr);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        fileInput.addEventListener('change', handleFileUpload);
+        resetButton.addEventListener('click', resetDashboard);
+      });
+    })();
+  </script>
 </body>
 </html>
