@@ -423,6 +423,18 @@
             <tbody id="dataTableBody"></tbody>
           </table>
         </div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #666;">
+            Items per page
+            <select id="pageSizeSelect" style="padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+              <option value="100" selected>100</option>
+              <option value="1000">1000</option>
+              <option value="5000">5000</option>
+              <option value="10000">10000</option>
+            </select>
+          </label>
+          <div id="paginationControls" style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -801,13 +813,42 @@
         });
       }
 
+var tablePageSize = parseInt(document.getElementById('pageSizeSelect').value, 10) || 100;
+var tableCurrentPage = 1;
+var tableFilteredData = [];
+
+      function filterData() {
+        var query = window.tableSearchQuery ? window.tableSearchQuery.toLowerCase() : '';
+        if (!query) {
+          tableFilteredData = processedData.slice();
+        } else {
+          tableFilteredData = processedData.filter(function(row) {
+            return Object.values(row).some(function(v) {
+              return String(v).toLowerCase().indexOf(query) !== -1;
+            });
+          });
+        }
+        tableCurrentPage = 1;
+      }
+
       function generateDataTable() {
+        filterData();
+        renderTablePage();
+        renderPagination();
+      }
+
+      function renderTablePage() {
         var thead = document.getElementById('dataTableHead');
         var tbody = document.getElementById('dataTableBody');
         var allColumns = Object.keys(processedData[0] || {});
         thead.innerHTML = '<tr>' + allColumns.map(function(col) { return '<th>' + col + '</th>'; }).join('') + '</tr>';
         tbody.innerHTML = '';
-        processedData.slice(0, 100).forEach(function(row) {
+
+        var start = (tableCurrentPage - 1) * tablePageSize;
+        var end = Math.min(start + tablePageSize, tableFilteredData.length);
+        var pageData = tableFilteredData.slice(start, end);
+
+        pageData.forEach(function(row) {
           var tr = document.createElement('tr');
           tr.innerHTML = allColumns.map(function(col) {
             var value = row[col] !== undefined && row[col] !== null ? row[col] : '-';
@@ -815,17 +856,61 @@
           }).join('');
           tbody.appendChild(tr);
         });
-        if (processedData.length > 100) {
-          var tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="' + allColumns.length + '" class="text-center text-muted">Showing 100 of ' + processedData.length + ' rows</td>';
-          tbody.appendChild(tr);
+
+        if (tableFilteredData.length === 0) {
+          var emptyRow = document.createElement('tr');
+          emptyRow.innerHTML = '<td colspan="' + allColumns.length + '" class="text-center text-muted">No matching rows</td>';
+          tbody.appendChild(emptyRow);
         }
       }
 
-      document.addEventListener('DOMContentLoaded', function() {
-        fileInput.addEventListener('change', handleFileUpload);
-        resetButton.addEventListener('click', resetDashboard);
-      });
+      function renderPagination() {
+        var container = document.getElementById('paginationControls');
+        if (!container) return;
+        container.innerHTML = '';
+
+        var totalPages = Math.max(1, Math.ceil(tableFilteredData.length / tablePageSize));
+
+        if (tableCurrentPage > 1) {
+          var prev = document.createElement('button');
+          prev.className = 'btn btn-sm btn-outline-primary';
+          prev.textContent = '‹ Prev';
+          prev.addEventListener('click', function() {
+            tableCurrentPage--;
+            renderTablePage();
+            renderPagination();
+          });
+          container.appendChild(prev);
+        }
+
+        var info = document.createElement('span');
+        info.className = 'text-muted';
+        info.textContent = 'Page ' + tableCurrentPage + ' of ' + totalPages;
+        container.appendChild(info);
+
+        if (tableCurrentPage < totalPages) {
+          var next = document.createElement('button');
+          next.className = 'btn btn-sm btn-outline-primary';
+          next.textContent = 'Next ›';
+          next.addEventListener('click', function() {
+            tableCurrentPage++;
+            renderTablePage();
+            renderPagination();
+          });
+          container.appendChild(next);
+        }
+      }
+
+document.addEventListener('DOMContentLoaded', function() {
+  fileInput.addEventListener('change', handleFileUpload);
+  resetButton.addEventListener('click', resetDashboard);
+  document.getElementById('pageSizeSelect').addEventListener('change', function() {
+    tablePageSize = parseInt(this.value, 10) || 100;
+    tableCurrentPage = 1;
+    renderTablePage();
+    renderPagination();
+  });
+});
     })();
   </script>
 </body>
